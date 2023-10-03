@@ -1,6 +1,5 @@
-using System.Collections;
+using Assets.Scripts.UnityObjects;
 using System.Collections.Generic;
-using UnityEngine;
 
 public class PlayerData
 {
@@ -8,5 +7,5 @@ public class PlayerData
 
     public string nickName;
 
-    public List<Card> hand;
+    public List<Video> hand;
 }

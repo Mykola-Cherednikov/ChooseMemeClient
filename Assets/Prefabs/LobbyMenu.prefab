@@ -825,7 +825,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2d0853b7602e23449d1b180adb2a4ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GamePrefab: {fileID: 140924613418983068, guid: f8f8e4641f51c0d46b205d9b3de8d0e3, type: 3}
+  GamePrefab: {fileID: 8244315177543907225, guid: 8e6d1dd3828b2da42a3803d5e58a2db8, type: 3}
   LobbiesMenuPrefab: {fileID: 7279002469532897427, guid: 19bc0a16985a24e45bc0defb8db9f27d, type: 3}
   ClientInfoRowPrefab: {fileID: 6688897369682605395, guid: b2357b4d6d7e51a4b8febe83ab70e870, type: 3}
   ErrorMessagePrefab: {fileID: 5145526363610705841, guid: baebb107fcc260840bf7a704a6aef823, type: 3}

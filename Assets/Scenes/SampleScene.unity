@@ -441,8 +441,8 @@ VideoPlayer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1450476838}
-  m_Enabled: 1
-  m_VideoClip: {fileID: 32900000, guid: 7d9e50517e6bf4a40ad7a48d1c53a908, type: 3}
+  m_Enabled: 0
+  m_VideoClip: {fileID: 32900000, guid: 8d7fa67c1a8021f45ab88a2c2bac6c33, type: 3}
   m_TargetCameraAlpha: 1
   m_TargetCamera3DLayout: 0
   m_TargetCamera: {fileID: 519420031}
@@ -452,13 +452,13 @@ VideoPlayer:
   m_TargetMaterialProperty: <noninit>
   m_RenderMode: 2
   m_AspectRatio: 2
-  m_DataSource: 1
-  m_TimeUpdateMode: 2
-  m_PlaybackSpeed: 1
-  m_AudioOutputMode: 2
+  m_DataSource: 0
+  m_TimeUpdateMode: 0
+  m_PlaybackSpeed: 0.75
+  m_AudioOutputMode: 0
   m_TargetAudioSources: []
   m_DirectAudioVolumes: []
-  m_Url: "file://D:/Unity/\u0421hooseMeme/Assets/Video/video_2023-09-22_21-52-43.mp4"
+  m_Url: "file://D:/Unity/\u0421hooseMeme/Assets/Video/Main Menu.mp4"
   m_EnabledAudioTracks: 
   m_DirectAudioMutes: 
   m_ControlledAudioTrackCount: 0
@@ -497,30 +497,6 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4224940958011181565, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
       propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4375990401144402809, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_Color.a
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4375990401144402809, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_Enabled
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5991559849248232577, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_RenderMode
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: 5991559849248232577, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_AspectRatio
-      value: 5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6505357909405058962, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_Material
-      value: 
-      objectReference: {fileID: 2100000, guid: 76fb921fe2ac3b640bb07c6e3578822d, type: 2}
-    - target: {fileID: 6750196210315704153, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_CullTransparentMesh
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7013694137680426366, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
@@ -603,13 +579,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8330139643119542070, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects:
-    - {fileID: 8330139643119542070, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}
+    m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1b57f7808c72c3e4cb1bcc8f588c812a, type: 3}

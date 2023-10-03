@@ -18,13 +18,13 @@ public class Queries
         return MultiplayerEvents.ConnectToLobby.ToString() + "\n" + JsonUtility.ToJson(shortLobbyDTO) + "\n";
     }
 
-    public static string ChoseCard(CardDTO cardDTO)
+    public static string ChoseVideo(VideoDTO videoDTO)
     {
-        return MultiplayerEvents.ChoseCardGameEvent.ToString() + "\n" + JsonUtility.ToJson(cardDTO) + "\n";
+        return MultiplayerEvents.ChoseVideoGameEvent.ToString() + "\n" + JsonUtility.ToJson(videoDTO) + "\n";
     }
 
-    public static string VoteForCard(CardDTO cardDTO)
+    public static string VoteForVideo(VideoDTO videoDTO)
     {
-        return MultiplayerEvents.VoteForCardGameEvent.ToString() + "\n" + JsonUtility.ToJson(cardDTO) + "\n";
+        return MultiplayerEvents.VoteForVideoGameEvent.ToString() + "\n" + JsonUtility.ToJson(videoDTO) + "\n";
     }
 }

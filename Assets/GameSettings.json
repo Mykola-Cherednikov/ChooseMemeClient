@@ -1,0 +1,7 @@
+{
+  "MilliSecondsBeforeStart": 3000,
+  "MilliSecondsPerVideoGive": 300,
+  "MilliSecondsReadingQuestion": 5000,
+  "MilliSecondsForChoseVideo": 30000,
+  "MilliSecondsVotingPerVideo": 15000
+}

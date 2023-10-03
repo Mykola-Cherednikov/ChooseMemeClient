@@ -1,122 +1,178 @@
+using Assets.Scripts.Data;
+using Assets.Scripts.UnityObjects;
 using ChooseMemeServer.DTO;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.Video;
 
 public enum GameStatus
 {
     BeforeGame,
     StartingGame,
     ReadingTheQuestion,
-    ChoseTheCard,
-    AfterChosedCard,
-    StartVoteForCard,
-    VotingForCard,
-    GivingAnotherCard,
+    ChoseTheVideo,
+    AfterChosedVideo,
+    VotingForVideo,
+    GivingAnotherVideo,
     EndGame
 }
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField]
-    private GameObject MainMenuPrefab;
+    [Header("Chose video")]
+    #region Chose video
 
     [SerializeField]
-    private TMP_Text questionText;
+    private GameObject ChoseSet;
     [SerializeField]
-    private TMP_Text questionWithIdText;
+    private VideoPlayer videoPlayerForChose;
     [SerializeField]
-    private TMP_Text gameStatusText;
+    private GameObject checkGameObject;
+    [SerializeField]
+    private GameObject playImageGameObjectForChose;
+    [SerializeField]
+    private Slider sliderForChose;
+    [SerializeField]
+    private GameObject placeForVideoHorizontalInChose;
+    [SerializeField]
+    private GameObject placeForVideoVerticalInChose;
+    [SerializeField]
+    private RenderTexture choseVideoPlayerHorizontalRT;
+    [SerializeField]
+    private RenderTexture choseVideoPlayerVerticalRT;
+
+    #endregion
+
+    [Header("Vote video")]
+    #region Vote video
 
     [SerializeField]
-    private List<GameObject> interfaceForChosing = new List<GameObject>();
+    private GameObject VotingSet;
     [SerializeField]
-    private GameObject hand;
+    private VideoPlayer videoPlayerForVote;
     [SerializeField]
-    private GameObject handContent;
+    private GameObject heartGameObject;
+    [SerializeField]
+    private GameObject crossGameObject;
+    [SerializeField]
+    private GameObject playImageGameObjectForVote;
+    [SerializeField]
+    private Slider sliderForVote;
+    [SerializeField]
+    private GameObject placeForVideoHorizontalInVote;
+    [SerializeField]
+    private GameObject placeForVideoVerticalInVote;
+    [SerializeField]
+    private RenderTexture voteVideoPlayerHorizontalRT;
+    [SerializeField]
+    private RenderTexture voteVideoPlayerVerticalRT;
 
-    [SerializeField]
-    private List<GameObject> interfaceForVoting = new List<GameObject>();
-    [SerializeField]
-    private GameObject voteShowcase;
-    [SerializeField] 
-    private GameObject voteShowcaseContent;
+    #endregion
 
-    [SerializeField] 
-    private List<GameObject> interfaceForEndGame = new List<GameObject>();
-    [SerializeField] 
-    private GameObject endGamePlayers;
-    [SerializeField] 
-    private GameObject endGamePlayersContent;
-
+    [Header("Else")]
     [SerializeField]
-    private GameObject CardPrefab;
+    private GameObject EndSet;
+    [SerializeField]
+    private GameObject EndPlayersContent;
     [SerializeField]
     private GameObject PlayerCardPrefab;
+    [SerializeField]
+    private TMP_Text questionText;
     [SerializeField]
     private TMP_Text secondsText;
 
 
+    private int numberChoseVideoInPlayer;
 
-    [SerializeField]
     private GameStatus gameStatus;
+
+    private GameSettings gameSettings;
+
+    private List<QuestionData> questions;
 
     private List<PlayerData> players;
 
-    private PlayerData you;
+    private PlayerData thisPlayer;
+
+    private int nowPlayingVoteVideo;
 
     private float timer;
 
-    private Card selectedCard;
 
-    private Card sendedCard;
 
-    private List<Card> cardsForVoting;
-
-    private void Start()
+    void Awake()
     {
-        Multiplayer.Instance.ReadingTheQuestionEvent += ReadingTheQuestion;
-        Multiplayer.Instance.ChoseTheCardEvent += ChoseTheCard;
-        Multiplayer.Instance.AfterChosedCardEvent += AfterChosedCard;
-        Multiplayer.Instance.StartVoteForCardEvent += StartVoteForCard;
-        Multiplayer.Instance.VotingForCardEvent += VotingForCard;
-        Multiplayer.Instance.GivingAnotherCardEvent += GivingAnotherCard;
-        Multiplayer.Instance.EndGameEvent += EndGame;
-        Multiplayer.Instance.AddCardEvent += AddCard;
-        Multiplayer.Instance.RemoveCardEvent += RemoveCard;
-
+        numberChoseVideoInPlayer = 0;
         gameStatus = GameStatus.BeforeGame;
-        cardsForVoting = new List<Card>();
+        videoPlayerForChose.prepareCompleted += SetChosePlayerPosition;
+        videoPlayerForVote.prepareCompleted += SetVotePlayerPosition;
+        sliderForChose.SetValueWithoutNotify(0.15f);
+        sliderForVote.SetValueWithoutNotify(0.15f);
+
+        using (StreamReader r = new StreamReader(Application.dataPath + "/GameSettings.json"))
+        {
+            string json = r.ReadToEnd();
+            gameSettings = JsonUtility.FromJson<GameSettings>(json)!;
+        }
+
+        QuestionData[] source;
+
+        using (StreamReader r = new StreamReader(Application.dataPath + "/Loads/questions.json"))
+        {
+            string json = r.ReadToEnd();
+            source = JsonUtility.FromJson<QuestionsArray>(json).Questions;
+        }
+
+        questions = new List<QuestionData>(source);
+
+        SetTimer(gameSettings.MilliSecondsBeforeStart);
+
+        Multiplayer.Instance.ReadingTheQuestionEvent += ReadingTheQuestion;
+        Multiplayer.Instance.ChoseTheVideoEvent += ChoseTheVideo;
+        Multiplayer.Instance.AfterChosedVideoEvent += AfterChosedVideo;
+        Multiplayer.Instance.VotingForVideoEvent += VotingForVideo;
+        Multiplayer.Instance.GivingAnotherVideoEvent += GivingAnotherVideo;
+        Multiplayer.Instance.EndGameEvent += EndGame;
+        Multiplayer.Instance.AddVideoEvent += AddVideo;
+        Multiplayer.Instance.RemoveVideoEvent += RemoveVideo;
     }
 
     private void Update()
     {
-        gameStatusText.text = gameStatus.ToString();
-
-        if (Input.GetKeyDown(KeyCode.Mouse0) && (gameStatus == GameStatus.ChoseTheCard || gameStatus == GameStatus.VotingForCard))
+        if(videoPlayerForChose.time == 15)
         {
-            Ray ray = new Ray(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -10f), Camera.main.transform.forward * 50000000);
+            videoPlayerForChose.Stop();
+        }
+        if (videoPlayerForVote.time == 15)
+        {
+            videoPlayerForVote.Stop();
+        }
 
-            if (Physics.Raycast(ray, 100000f))
+        playImageGameObjectForChose.SetActive(videoPlayerForChose.gameObject.activeSelf == true && !videoPlayerForChose.isPlaying);
+
+        playImageGameObjectForVote.SetActive(videoPlayerForVote.gameObject.activeSelf == true && !videoPlayerForVote.isPlaying);
+
+        checkGameObject.SetActive(gameStatus == GameStatus.ChoseTheVideo && thisPlayer.hand != null && thisPlayer.hand[numberChoseVideoInPlayer] != null && thisPlayer.hand[numberChoseVideoInPlayer].chose);
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            if (gameStatus == GameStatus.ReadingTheQuestion || gameStatus == GameStatus.ChoseTheVideo || gameStatus == GameStatus.VotingForVideo)
             {
-                List<RaycastHit> hits = Physics.RaycastAll(ray, 100000f).ToList();
-                foreach (var hit in hits)
+                Ray ray = new Ray(new Vector3(Input.mousePosition.x, Input.mousePosition.y, -10f), Camera.main.transform.forward * 50000000);
+                if (Physics.Raycast(ray, 100000f))
                 {
-                    if (hit.collider.gameObject.TryGetComponent<Card>(out var card))
+                    List<RaycastHit> hits = Physics.RaycastAll(ray, 100000f).ToList();
+                    foreach (var hit in hits)
                     {
-                        if (selectedCard == card)
+                        if (hit.collider.gameObject.TryGetComponent<VideoPlayer>(out var videoPlayer))
                         {
-                            sendedCard?.UnsendCard();
-                            card.SelectCard();
-                            sendedCard = card;
-                        }
-                        else
-                        {
-                            selectedCard?.UnselectCard();
-                            selectedCard = card;
-                            selectedCard.SelectCard();
+                            ClickOnVideoPlayer(videoPlayer);
                         }
                     }
                 }
@@ -129,11 +185,11 @@ public class GameManager : MonoBehaviour
         if (timer > 0)
         {
             timer -= Time.fixedDeltaTime;
-            secondsText.text = String.Format("{0:0.00}", timer);
-        }
-        else
-        {
-            secondsText.text = "0";
+            if (timer <= 0)
+            {
+                timer = 0;
+            }
+            secondsText.text = String.Format("{0:0}", timer);
         }
     }
 
@@ -142,8 +198,6 @@ public class GameManager : MonoBehaviour
         players = new List<PlayerData>();
         gameStatus = GameStatus.StartingGame;
 
-        TurnOnChoseInterface();
-
         foreach (var client in startGameDTO.clientsDTO.clientsDTO)
         {
             PlayerData player = new PlayerData();
@@ -151,192 +205,239 @@ public class GameManager : MonoBehaviour
             player.nickName = client.name;
 
             Debug.Log(player.id + " " + player.nickName);
-            player.hand = new List<Card>();
+            player.hand = new List<Video>();
             players.Add(player);
         }
 
         PlayerData youPlayer = players.FirstOrDefault(p => p.id == startGameDTO.you.id);
 
-        you = youPlayer;
-        StartTimer(3);
+        thisPlayer = youPlayer;
+
+        ChoseSet.SetActive(true);
     }
 
     private void ReadingTheQuestion(QuestionDTO questionDTO)
     {
+        sliderForChose.SetValueWithoutNotify(0.15f);
         gameStatus = GameStatus.ReadingTheQuestion;
-        questionWithIdText.text = questionDTO.id.ToString();
-        StartTimer(4);
+        SetTimer(gameSettings.MilliSecondsReadingQuestion);
+        ClickOnVideoPlayer(videoPlayerForChose);
+        questionText.text = questions[questionDTO.id].text;
     }
 
-    private void ChoseTheCard()
+    private void ChoseTheVideo()
     {
-        gameStatus = GameStatus.ChoseTheCard;
-        StartTimer(60);
+        gameStatus = GameStatus.ChoseTheVideo;
+        SetTimer(gameSettings.MilliSecondsForChoseVideo);
     }
 
-    private void AfterChosedCard()
+    private void AfterChosedVideo()
     {
-        gameStatus = GameStatus.AfterChosedCard;
-        foreach(Card card in you.hand)
+        gameStatus = GameStatus.AfterChosedVideo;
+
+        numberChoseVideoInPlayer = 0;
+
+        ChoseSet.SetActive(false);
+        VotingSet.SetActive(true);
+    }
+
+    private void VotingForVideo(VideoDTO video)
+    {
+        gameStatus = GameStatus.VotingForVideo;
+        ClickOnVideoPlayer(videoPlayerForVote);
+        SetTimer(gameSettings.MilliSecondsVotingPerVideo);
+        sliderForVote.SetValueWithoutNotify(0.15f);
+
+        videoPlayerForVote.SetDirectAudioVolume(0, 0.15f);
+        videoPlayerForVote.url = "file://" + Application.dataPath + $"/Loads/{video.id}.mp4";
+        videoPlayerForVote.Prepare();
+        videoPlayerForVote.Play();
+        nowPlayingVoteVideo = video.id;
+
+        heartGameObject.SetActive(true);
+        if (video.owner.id == thisPlayer.id)
         {
-            card.UnselectCard();
-            card.UnsendCard();
+            heartGameObject.SetActive(false);
         }
-
-        TurnOffChoseInterface();
+        crossGameObject.SetActive(false);
     }
 
-    private void StartVoteForCard(List<CardDTO> cards)
+    private void GivingAnotherVideo()
     {
-        foreach(var card in cardsForVoting)
+        gameStatus = GameStatus.GivingAnotherVideo;
+        ChoseSet.SetActive(true);
+        VotingSet.SetActive(false);
+        ClickOnVideoPlayer(videoPlayerForChose);
+        foreach (Video video in thisPlayer.hand)
         {
-            Destroy(card.gameObject);
-        }
-
-        cardsForVoting = new List<Card>();
-
-        gameStatus = GameStatus.StartVoteForCard;
-
-        foreach (var card in cards)
-        {
-            Card cardObject = Instantiate(CardPrefab, voteShowcaseContent.transform).GetComponent<Card>();
-            cardObject.SetCardData(card.id, null, CardType.CardForVote);
-            cardsForVoting.Add(cardObject);
-        }
-        StartTimer(60);
-    }
-
-    private void VotingForCard()
-    {
-        gameStatus = GameStatus.VotingForCard;
-        TurnOnVoteInterface();
-        StartTimer(15);
-    }
-
-    private void GivingAnotherCard()
-    {
-        TurnOnChoseInterface();
-        TurnOffVoteInterface();
-        gameStatus = GameStatus.GivingAnotherCard;
-    }
-
-    private void AddCard(CardDTO cardDTO)
-    {
-        PlayerData playerOwner = players.FirstOrDefault(p => p.id == cardDTO.owner.id);
-        if (playerOwner == you)
-        {
-            Card card = Instantiate(CardPrefab, handContent.transform).GetComponent<Card>();
-            card.SetCardData(cardDTO.id, playerOwner, CardType.CardForChose);
-
-            Debug.Log($"{playerOwner.nickName} get card, with id = {card.id}");
-
-            playerOwner.hand.Add(card);
+            video.chose = false;
         }
     }
 
-    private void RemoveCard(CardDTO cardDTO)
+    private void AddVideo(VideoDTO videoDTO)
     {
-        PlayerData playerOwner = players.FirstOrDefault(p => p.id == cardDTO.owner.id);
-        if (playerOwner == you)
+        PlayerData playerOwner = players.FirstOrDefault(p => p.id == videoDTO.owner.id);
+        if (playerOwner == thisPlayer)
         {
-            Card card = playerOwner.hand.FirstOrDefault(c => c.id == cardDTO.id);
+            Video video = new Video() { id = videoDTO.id, owner = playerOwner };
+            playerOwner.hand.Add(video);
+        }
+    }
 
-            Debug.Log($"{playerOwner.nickName} remove card, with id = {card.id}");
-            playerOwner.hand.Remove(card);
-            Destroy(card.gameObject);
+    private void RemoveVideo(VideoDTO videoDTO)
+    {
+        PlayerData playerOwner = players.FirstOrDefault(p => p.id == videoDTO.owner.id);
+
+        if (playerOwner == thisPlayer)
+        {
+            Video video = playerOwner.hand.FirstOrDefault(v => v.id == videoDTO.id);
+            playerOwner.hand.Remove(video);
+        }
+    }
+
+    public void PreviousVideo()
+    {
+        if (gameStatus == GameStatus.ReadingTheQuestion || gameStatus == GameStatus.ChoseTheVideo)
+        {
+            numberChoseVideoInPlayer = (numberChoseVideoInPlayer - 1) % thisPlayer.hand.Count;
+            if (numberChoseVideoInPlayer < 0)
+            {
+                numberChoseVideoInPlayer = thisPlayer.hand.Count - 1;
+            }
+            TurnOnVideo();
+        }
+    }
+
+    public void NextVideo()
+    {
+        if (gameStatus == GameStatus.ReadingTheQuestion || gameStatus == GameStatus.ChoseTheVideo)
+        {
+            numberChoseVideoInPlayer = (numberChoseVideoInPlayer + 1) % thisPlayer.hand.Count;
+            TurnOnVideo();
+        }
+    }
+
+    private void TurnOnVideo()
+    {
+        videoPlayerForChose.url = "file://" + Application.dataPath + $"/Loads/{thisPlayer.hand[numberChoseVideoInPlayer].id}.mp4";
+        sliderForChose.SetValueWithoutNotify(0.15f);
+        videoPlayerForChose.SetDirectAudioVolume(0, 0.15f);
+        videoPlayerForChose.Prepare();
+        videoPlayerForChose.Play();
+    }
+
+    public void ClickOnVideoPlayer(VideoPlayer videoPlayer)
+    {
+        if (gameStatus == GameStatus.ReadingTheQuestion || gameStatus == GameStatus.ChoseTheVideo || gameStatus == GameStatus.VotingForVideo || gameStatus == GameStatus.GivingAnotherVideo)
+        {
+            if (videoPlayer.isPlaying)
+            {
+                videoPlayer.Stop();
+            }
+            else
+            {
+                if (gameStatus == GameStatus.ReadingTheQuestion || gameStatus == GameStatus.ChoseTheVideo || gameStatus == GameStatus.GivingAnotherVideo)
+                {
+                    videoPlayer.url = "file://" + Application.dataPath + $"/Loads/{thisPlayer.hand[numberChoseVideoInPlayer].id}.mp4";
+                }
+                else
+                {
+                    videoPlayer.url = "file://" + Application.dataPath + $"/Loads/{nowPlayingVoteVideo}.mp4";
+                }
+                videoPlayerForChose.Prepare();
+                videoPlayer.Play();
+            }
+        }
+    }
+
+    public void ChoseVideo()
+    {
+        if (gameStatus == GameStatus.ChoseTheVideo)
+        {
+            foreach (var video in thisPlayer.hand)
+            {
+                video.chose = false;
+            }
+            thisPlayer.hand[numberChoseVideoInPlayer].chose = true;
+            Multiplayer.Instance.ChoseVideo(new VideoDTO() { id = thisPlayer.hand[numberChoseVideoInPlayer].id });
+        }
+    }
+
+    public void VoteForVideo()
+    {
+        if (gameStatus == GameStatus.VotingForVideo)
+        {
+            crossGameObject.SetActive(!crossGameObject.activeSelf);
+            Multiplayer.Instance.VoteForVideo(new VideoDTO() { id = nowPlayingVoteVideo });
         }
     }
 
     private void EndGame(List<PlayerDTO> players)
     {
-        TurnOffVoteInterface();
-        TurnOffChoseInterface();
-        TurnOnEndGameInterface();
+        ChoseSet.SetActive(false);
+        VotingSet.SetActive(false);
+        EndSet.SetActive(true);
 
-        players = players.OrderBy(p => p.points).ToList();
-
-        foreach(var player in players)
+        players = players.OrderByDescending(p => p.points).ToList();
+        foreach (var player in players)
         {
-            PlayerCard playerCard = Instantiate(PlayerCardPrefab, endGamePlayersContent.transform).GetComponent<PlayerCard>();
+            PlayerCard playerCard = Instantiate(PlayerCardPrefab, EndPlayersContent.transform).GetComponent<PlayerCard>();
             playerCard.SetText(player.clientDTO.name, player.points);
         }
     }
 
-    private void StartTimer(int seconds)
+    public void SetVolumeForVideo(float f)
     {
-        timer = seconds;
+        videoPlayerForChose.SetDirectAudioVolume(0, f);
+        videoPlayerForVote.SetDirectAudioVolume(0, f);
     }
 
-    public void ExitFromGame()
+    private void SetChosePlayerPosition(VideoPlayer player)
     {
-        Multiplayer.Instance.DisconnectFromServer();
-        MainMenu mainMenu = Instantiate(MainMenuPrefab, this.gameObject.GetComponentInParent<Canvas>().transform).GetComponent<MainMenu>();
-        mainMenu.transform.position = this.gameObject.transform.position;
-        Destroy(this.gameObject);
-    }
-
-    #region Interfaces
-
-    private void TurnOnChoseInterface()
-    {
-        foreach(var obj in interfaceForChosing)
+        placeForVideoVerticalInChose.SetActive(false);
+        placeForVideoHorizontalInChose.SetActive(false);
+        if (player.texture.width >  player.texture.height)
         {
-            obj.SetActive(true);
+            player.targetTexture = choseVideoPlayerHorizontalRT;
+            placeForVideoHorizontalInChose.SetActive(true);
+        }
+        else
+        {
+            player.targetTexture = choseVideoPlayerVerticalRT;
+            placeForVideoVerticalInChose.SetActive(true);
         }
     }
 
-    private void TurnOffChoseInterface()
+    private void SetVotePlayerPosition(VideoPlayer player)
     {
-        foreach (var obj in interfaceForChosing)
+        placeForVideoVerticalInVote.SetActive(false);
+        placeForVideoHorizontalInVote.SetActive(false);
+        if (player.texture.width > player.texture.height)
         {
-            obj.SetActive(false);
+            player.targetTexture = voteVideoPlayerHorizontalRT;
+            placeForVideoHorizontalInVote.SetActive(true);
+        }
+        else
+        {
+            player.targetTexture = voteVideoPlayerVerticalRT;
+            placeForVideoVerticalInVote.SetActive(true);
         }
     }
 
-    private void TurnOnVoteInterface()
+    private void SetTimer(int milliseconds)
     {
-        foreach (var obj in interfaceForVoting)
-        {
-            obj.SetActive(true);
-        }
+        timer = milliseconds / 1000f;
     }
-
-    private void TurnOffVoteInterface()
-    {
-        foreach (var obj in interfaceForVoting)
-        {
-            obj.SetActive(false);
-        }
-    }
-
-    private void TurnOnEndGameInterface()
-    {
-        foreach (var obj in interfaceForEndGame)
-        {
-            obj.SetActive(true);
-        }
-    }
-
-    private void TurnOffEndGameInterface()
-    {
-        foreach (var obj in interfaceForEndGame)
-        {
-            obj.SetActive(false);
-        }
-    }
-
-    #endregion
 
     private void OnDestroy()
     {
         Multiplayer.Instance.ReadingTheQuestionEvent -= ReadingTheQuestion;
-        Multiplayer.Instance.ChoseTheCardEvent -= ChoseTheCard;
-        Multiplayer.Instance.AfterChosedCardEvent -= AfterChosedCard;
-        Multiplayer.Instance.StartVoteForCardEvent -= StartVoteForCard;
-        Multiplayer.Instance.VotingForCardEvent -= VotingForCard;
-        Multiplayer.Instance.GivingAnotherCardEvent -= GivingAnotherCard;
+        Multiplayer.Instance.ChoseTheVideoEvent -= ChoseTheVideo;
+        Multiplayer.Instance.AfterChosedVideoEvent -= AfterChosedVideo;
+        Multiplayer.Instance.VotingForVideoEvent -= VotingForVideo;
+        Multiplayer.Instance.GivingAnotherVideoEvent -= GivingAnotherVideo;
         Multiplayer.Instance.EndGameEvent -= EndGame;
-        Multiplayer.Instance.AddCardEvent -= AddCard;
-        Multiplayer.Instance.RemoveCardEvent -= RemoveCard;
+        Multiplayer.Instance.AddVideoEvent -= AddVideo;
+        Multiplayer.Instance.RemoveVideoEvent -= RemoveVideo;
     }
 }

@@ -1,4 +1,5 @@
 using Assets.Scripts.DTO;
+using Assets.Scripts.UnityObjects;
 using ChooseMemeServer.DTO;
 using System;
 using System.Collections.Generic;
@@ -31,18 +32,18 @@ public enum MultiplayerEvents
     StartGame, //client
 
     StartingGameGameEvent, //server
-    AddCardGameEvent, //server
-    RemoveCardGameEvent, //server
     ReadingTheQuestionGameEvent, //server
-    ChoseTheCardGameEvent, //server
-    AfterChosedCardGameEvent, //server
-    StartVoteForCardGameEvent, //server
-    VotingForCardGameEvent, //server
-    GivingAnotherCardGameEvent, //server
+    ChoseTheVideoGameEvent, //server
+    AfterChosedVideoGameEvent, //server
+    StartVoteForVideoGameEvent, //server
+    VotingForVideoGameEvent, //server
+    VoteForVideoGameEvent, //client
+    GivingAnotherVideoGameEvent, //server
     EndGameGameEvent, //server
 
-    ChoseCardGameEvent, //client
-    VoteForCardGameEvent, //client
+    AddVideoGameEvent, //server
+    ChoseVideoGameEvent, //client
+    RemoveVideoGameEvent, //server
 }
 
 public class Multiplayer : MonoBehaviour
@@ -76,29 +77,26 @@ public class Multiplayer : MonoBehaviour
     public delegate void StartingGame(StartGameDTO startGameDTO);
     public event StartingGame StartingGameEvent;
 
-    public delegate void AddCard(CardDTO cardDTO);
-    public event AddCard AddCardEvent;
+    public delegate void AddVideo(VideoDTO videoDTO);
+    public event AddVideo AddVideoEvent;
 
     public delegate void ReadingTheQuestion(QuestionDTO questionDTO);
     public event ReadingTheQuestion ReadingTheQuestionEvent;
 
-    public delegate void ChoseTheCard();
-    public event ChoseTheCard ChoseTheCardEvent;
+    public delegate void ChoseTheVideo();
+    public event ChoseTheVideo ChoseTheVideoEvent;
 
-    public delegate void AfterChosedCard();
-    public event AfterChosedCard AfterChosedCardEvent;
+    public delegate void AfterChosedVideo();
+    public event AfterChosedVideo AfterChosedVideoEvent;
 
-    public delegate void RemoveCard(CardDTO cardDTO);
-    public event RemoveCard RemoveCardEvent;
+    public delegate void RemoveVideo(VideoDTO videoDTO);
+    public event RemoveVideo RemoveVideoEvent;
 
-    public delegate void StartVoteForCard(List<CardDTO> cardsDTO);
-    public event StartVoteForCard StartVoteForCardEvent;
+    public delegate void VotingForVideo(VideoDTO videoDTO);
+    public event VotingForVideo VotingForVideoEvent;
 
-    public delegate void VotingForCard();
-    public event VotingForCard VotingForCardEvent;
-
-    public delegate void GivingAnotherCard();
-    public event GivingAnotherCard GivingAnotherCardEvent;
+    public delegate void GivingAnotherVideo();
+    public event GivingAnotherVideo GivingAnotherVideoEvent;
 
     public delegate void EndGame(List<PlayerDTO> playerDTO);
     public event EndGame EndGameEvent;
@@ -207,26 +205,26 @@ public class Multiplayer : MonoBehaviour
                                     ReadingTheQuestionEvent?.Invoke(questionDTO);
                                     break;
                                 }
-                            case MultiplayerEvents.AddCardGameEvent:
+                            case MultiplayerEvents.AddVideoGameEvent:
                                 {
-                                    CardDTO cardDTO = JsonUtility.FromJson<CardDTO>(queries.Dequeue());
-                                    AddCardEvent?.Invoke(cardDTO);
+                                    VideoDTO videoDTO = JsonUtility.FromJson<VideoDTO>(queries.Dequeue());
+                                    AddVideoEvent?.Invoke(videoDTO);
                                     break;
                                 }
-                            case MultiplayerEvents.RemoveCardGameEvent:
+                            case MultiplayerEvents.RemoveVideoGameEvent:
                                 {
-                                    CardDTO cardDTO = JsonUtility.FromJson<CardDTO>(queries.Dequeue());
-                                    RemoveCardEvent?.Invoke(cardDTO);
+                                    VideoDTO videoDTO = JsonUtility.FromJson<VideoDTO>(queries.Dequeue());
+                                    RemoveVideoEvent?.Invoke(videoDTO);
                                     break;
                                 }
-                            case MultiplayerEvents.ChoseTheCardGameEvent:
+                            case MultiplayerEvents.ChoseTheVideoGameEvent:
                                 {
-                                    ChoseTheCardEvent?.Invoke();
+                                    ChoseTheVideoEvent?.Invoke();
                                     break;
                                 }
-                            case MultiplayerEvents.AfterChosedCardGameEvent:
+                            case MultiplayerEvents.AfterChosedVideoGameEvent:
                                 {
-                                    AfterChosedCardEvent?.Invoke();
+                                    AfterChosedVideoEvent?.Invoke();
                                     break;
                                 }
                             case MultiplayerEvents.SetNewHost:
@@ -234,21 +232,15 @@ public class Multiplayer : MonoBehaviour
                                     SetNewHostEvent?.Invoke();
                                     break;
                                 }
-                            case MultiplayerEvents.StartVoteForCardGameEvent:
+                            case MultiplayerEvents.VotingForVideoGameEvent:
                                 {
-                                    ArrayOfCardsDTO array = JsonUtility.FromJson<ArrayOfCardsDTO>(queries.Dequeue());
-                                    List<CardDTO> cards = new List<CardDTO>(array.cards);
-                                    StartVoteForCardEvent.Invoke(cards);
+                                    VideoDTO videoDTO = JsonUtility.FromJson<VideoDTO>(queries.Dequeue());
+                                    VotingForVideoEvent?.Invoke(videoDTO);
                                     break;
                                 }
-                            case MultiplayerEvents.VotingForCardGameEvent:
+                            case MultiplayerEvents.GivingAnotherVideoGameEvent:
                                 {
-                                    VotingForCardEvent?.Invoke();
-                                    break;
-                                }
-                            case MultiplayerEvents.GivingAnotherCardGameEvent:
-                                {
-                                    GivingAnotherCardEvent?.Invoke(); 
+                                    GivingAnotherVideoEvent?.Invoke(); 
                                     break;
                                 }
                             case MultiplayerEvents.EndGameGameEvent:
@@ -260,7 +252,7 @@ public class Multiplayer : MonoBehaviour
                                 }
                             case MultiplayerEvents.Ping:
                                 {
-                                    Debug.Log("Ping");
+                                    //Debug.Log("Ping");
                                     break;
                                 }
                         }
@@ -332,16 +324,16 @@ public class Multiplayer : MonoBehaviour
         await client.GetStream().WriteAsync(Encoding.UTF8.GetBytes(query));
     }
 
-    public async void ChoseCard(CardDTO cardDTO)
+    public async void ChoseVideo(VideoDTO videoDTO)
     {
-        string query = Queries.ChoseCard(cardDTO);
+        string query = Queries.ChoseVideo(videoDTO);
 
         await client.GetStream().WriteAsync(Encoding.UTF8.GetBytes(query));
     }
 
-    public async void VoteForCard(CardDTO cardDTO)
+    public async void VoteForVideo(VideoDTO videoDTO)
     {
-        string query = Queries.VoteForCard(cardDTO);
+        string query = Queries.VoteForVideo(videoDTO);
 
         await client.GetStream().WriteAsync(Encoding.UTF8.GetBytes(query));
     }

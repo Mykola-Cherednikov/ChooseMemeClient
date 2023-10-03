@@ -1,7 +1,9 @@
 using ChooseMemeServer.DTO;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Video;
 
@@ -25,21 +27,20 @@ public class BackGround : MonoBehaviour
     {
         player = GetComponent<VideoPlayer>();
         audioSource = GetComponent<AudioSource>();
-        //Multiplayer.Instance.StartingGameEvent += StartGame;
 
-        //ErrorMessage errorMessage = Instantiate(ErrorMessagePrefab, Canvas.transform).GetComponent<ErrorMessage>();
-        //errorMessage.SetErrorMessage(Application.dataPath);
-
-        player.gameObject.SetActive(false);
-        player.gameObject.SetActive(true);
+        Testing();
     }
-    
-    private void StartGame(StartGameDTO startGameDTO)
+
+    private void Testing()
     {
-        player.clip = clip;
-        player.EnableAudioTrack(0, true);
-        player.SetDirectAudioVolume(0, 0.15f);
-        player.gameObject.SetActive(false);
-        player.gameObject.SetActive(true);
+        player.Prepare();
+        player.prepareCompleted += Test;
+        
+    }
+
+    private void Test(VideoPlayer player)
+    {
+        Debug.Log(player.texture.width);
+        Debug.Log(player.texture.height);
     }
 }
